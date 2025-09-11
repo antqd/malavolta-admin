@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "rewrites": [
+    { "source": "/api-proxy/(.*)", "destination": "http://185.229.239.141/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
