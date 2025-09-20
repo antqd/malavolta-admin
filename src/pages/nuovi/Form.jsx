@@ -1,20 +1,37 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { api } from "../../lib/api";
+
+const euro = (v) => {
+  const n = Number(v || 0);
+  return n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+};
 
 export default function NuoviForm() {
   const { id } = useParams();
   const isEdit = !!id;
   const nav = useNavigate();
+  const fileRef = useRef(null);
+
   const [form, setForm] = useState({
     name: "",
-    photo: "",
+    photo: "", // può contenere URL http(s) o data URL (base64)
     description: "",
-    price: "",
+    price: "", // in euro (stringa user-friendly)
     quantity: 0,
   });
   const [err, setErr] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState(""); // preview immagine sicura
+
+  // calcola preview robusta
+  useEffect(() => {
+    const s = (form.photo || "").trim();
+    if (!s) return setPreview("");
+    if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:") || s.startsWith("/"))
+      setPreview(s);
+    else setPreview(""); // evita URL non valide
+  }, [form.photo]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -25,14 +42,30 @@ export default function NuoviForm() {
           name: d.name || "",
           photo: d.photo_url || "",
           description: d.description || "",
-          price: (d.price_cents ?? 0) / 100,
+          price: ((d.price_cents ?? 0) / 100).toString(),
           quantity: d.quantity ?? 0,
         });
       } catch (e) {
         setErr(e.message);
       }
     })();
-  }, [id]);
+  }, [id, isEdit]);
+
+  const onPickFile = async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    // Converti a data URL (base64) e metti nel form.photo
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((x) => ({ ...x, photo: String(reader.result) }));
+    };
+    reader.readAsDataURL(f);
+  };
+
+  const onDecQty = () =>
+    setForm((x) => ({ ...x, quantity: Math.max(0, Number(x.quantity || 0) - 1) }));
+  const onIncQty = () =>
+    setForm((x) => ({ ...x, quantity: Number(x.quantity || 0) + 1 }));
 
   const submit = async (e) => {
     e.preventDefault();
@@ -40,10 +73,10 @@ export default function NuoviForm() {
     setErr(null);
     try {
       const body = {
-        name: form.name,
-        photo: form.photo || null,
-        description: form.description || null,
-        price: form.price ? Number(String(form.price).replace(",", ".")) : 0,
+        name: form.name.trim(),
+        photo: form.photo || null, // può essere URL o data URL
+        description: form.description?.trim() || null,
+        price: form.price ? Number(String(form.price).replace(",", ".")) : 0, // euro → number
         quantity: Number(form.quantity) || 0,
       };
       if (isEdit) await api.updateNuovo(id, body);
@@ -58,10 +91,17 @@ export default function NuoviForm() {
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>
-        {isEdit ? `Modifica trattore (nuovi) #${id}` : "Nuovo trattore (nuovi)"}
-      </h2>
+      <div className="row" style={{ alignItems: "center", marginBottom: 16 }}>
+        <h2 style={{ margin: 0 }}>
+          {isEdit ? `Modifica trattore (Nuovi) #${id}` : "Nuovo trattore (Nuovi)"}
+        </h2>
+        <div style={{ marginLeft: "auto" }}>
+          <Link to="/nuovi" className="btn secondary">← Torna alla lista</Link>
+        </div>
+      </div>
+
       {err && <p className="err">{err}</p>}
+
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="label">Nome *</label>
@@ -75,33 +115,48 @@ export default function NuoviForm() {
 
         <div className="row">
           <div>
-            <label className="label">Foto (URL)</label>
-            <input
-              className="input"
-              placeholder="https://..."
-              value={form.photo}
-              onChange={(e) => setForm({ ...form, photo: e.target.value })}
-            />
+            <label className="label">Foto (URL o carica file) </label>
+            <div className="row" style={{ gap: 8, gridTemplateColumns: "1fr auto" }}>
+              <input
+                className="input"
+                placeholder="https://… oppure verrà riempito se carichi un file"
+                value={form.photo}
+                onChange={(e) => setForm({ ...form, photo: e.target.value })}
+              />
+              <button
+                type="button"
+                className="btn"
+                onClick={() => fileRef.current?.click()}
+                title="Carica immagine"
+              >
+                + Immagine
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={onPickFile}
+              />
+            </div>
           </div>
+
           <div>
             <label className="label">Anteprima</label>
             <div
               style={{
                 border: "1px solid #e5e7eb",
                 borderRadius: 12,
-                height: 120,
+                height: 140,
+                width: 220,
                 display: "grid",
                 placeItems: "center",
                 background: "#f7f7f9",
                 overflow: "hidden",
               }}
             >
-              {form.photo ? (
-                <img
-                  src={form.photo}
-                  alt=""
-                  style={{ maxHeight: 120, objectFit: "cover" }}
-                />
+              {preview ? (
+                <img src={preview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : (
                 <span style={{ fontSize: 12, color: "#999" }}>nessuna</span>
               )}
@@ -116,34 +171,49 @@ export default function NuoviForm() {
             rows={4}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="Note, caratteristiche, condizioni…"
           />
         </div>
 
         <div className="row">
           <div>
             <label className="label">Prezzo (€)</label>
-            <input
-              type="number"
-              step="0.01"
-              className="input"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-            />
+            <div className="row" style={{ gridTemplateColumns: "1fr auto", gap: 8 }}>
+              <input
+                type="number"
+                step="0.01"
+                className="input"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                placeholder="es. 15999"
+                min="0"
+              />
+              <div className="badge">{euro(form.price)}</div>
+            </div>
           </div>
+
           <div>
             <label className="label">Quantità</label>
-            <input
-              type="number"
-              className="input"
-              value={form.quantity}
-              onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-            />
+            <div className="row" style={{ gridTemplateColumns: "auto 1fr auto", gap: 8 }}>
+              <button type="button" className="btn secondary" onClick={onDecQty}>−</button>
+              <input
+                type="number"
+                className="input"
+                value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                min="0"
+              />
+              <button type="button" className="btn secondary" onClick={onIncQty}>+</button>
+            </div>
           </div>
         </div>
 
-        <button className="btn" disabled={saving}>
-          {saving ? "Salvo…" : isEdit ? "Salva" : "Crea"}
-        </button>
+        <div className="row" style={{ justifyContent: "flex-end", gap: 8 }}>
+          <Link to="/nuovi" className="btn secondary">Annulla</Link>
+          <button className="btn" disabled={saving}>
+            {saving ? "Salvo…" : isEdit ? "Salva modifiche" : "Crea trattore"}
+          </button>
+        </div>
       </form>
     </div>
   );

@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../lib/api";
 
+const euro = (cents) =>
+  typeof cents === "number"
+    ? (cents / 100).toLocaleString("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })
+    : "—";
+
 export default function NuoviList() {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
@@ -22,7 +27,7 @@ export default function NuoviList() {
   };
 
   const delItem = async (id) => {
-    if (!confirm("Eliminare?")) return;
+    if (!confirm("Eliminare questo trattore?")) return;
     await api.deleteNuovo(id);
     setItems((prev) => prev.filter((x) => x.id !== id));
   };
@@ -39,62 +44,61 @@ export default function NuoviList() {
           placeholder="Cerca per nome/descrizione…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && load()}
         />
-        <button className="btn secondary" onClick={load}>
-          Cerca
-        </button>
-        <Link to="/nuovi/new" className="btn">
-          + Nuovo
-        </Link>
+        <button className="btn secondary" onClick={load}>Cerca</button>
+        <Link to="/nuovi/new" className="btn">+ Nuovo</Link>
       </div>
 
       {err && <p className="err">{err}</p>}
+
       {loading ? (
         <p>Caricamento…</p>
       ) : (
         <div className="grid">
           {items.map((p) => (
             <div key={p.id} className="cardItem">
-              <img
-                src={
-                  p.photo_url ||
-                  "https://via.placeholder.com/400x260?text=No+Photo"
-                }
-                className="thumb"
-                alt=""
-              />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: 8,
-                  alignItems: "center",
-                }}
-              >
-                <h3 style={{ margin: 0 }}>{p.name}</h3>
-                <span className="badge">
-                  {(p.price_cents / 100).toFixed(2)} €
-                </span>
-              </div>
-              <p style={{ fontSize: 12, color: "#666" }}>
-                {p.description || "-"}
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginTop: 8,
-                }}
-              >
-                <span style={{ fontSize: 12 }}>Qty: {p.quantity}</span>
-                <div className="actions">
-                  <Link to={`/nuovi/${p.id}`} className="btn secondary">
-                    Modifica
-                  </Link>
-                  <button onClick={() => delItem(p.id)} className="btn danger">
-                    Elimina
-                  </button>
+              <div className="row" style={{ gap: 12, gridTemplateColumns: "120px 1fr auto" }}>
+                <img
+                  src={
+                    (p.photo_url || "").startsWith("http") || (p.photo_url || "").startsWith("data:")
+                      ? p.photo_url
+                      : (p.photo_url || "").startsWith("/")
+                      ? p.photo_url
+                      : "https://via.placeholder.com/240x160?text=No+Photo"
+                  }
+                  className="thumb"
+                  alt=""
+                  style={{ height: 80, width: 120, objectFit: "cover", borderRadius: 8 }}
+                />
+
+                <div style={{ minWidth: 0 }}>
+                  <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {p.name}
+                    </h3>
+                    <span className="badge">{euro(p.price_cents)}</span>
+                  </div>
+
+                  <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                    {p.description || "—"}
+                  </div>
+
+                  <div className="row" style={{ justifyContent: "space-between", marginTop: 6 }}>
+                    <span style={{ fontSize: 12 }}>
+                      Codice: <strong>{p.id}</strong> • Qty: <strong>{p.quantity}</strong>
+                    </span>
+                    {p.quantity === 1 && (
+                      <span className="badge" style={{ background: "#fee2e2", color: "#b91c1c" }}>
+                        Solo 1 disponibile
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="actions" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <Link to={`/nuovi/${p.id}`} className="btn secondary">Modifica</Link>
+                  <button onClick={() => delItem(p.id)} className="btn danger">Elimina</button>
                 </div>
               </div>
             </div>
