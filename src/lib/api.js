@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_BACKEND_URL || "http://185.229.239.141";
+const BASE = import.meta.env.VITE_BACKEND_URL || "https://api.alfonsomalavolta.com";
 
 async function json(path, init) {
   const r = await fetch(`${BASE}${path}`, {
