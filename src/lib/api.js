@@ -2,6 +2,7 @@ const BASE = import.meta.env.VITE_BACKEND_URL || "https://api.alfonsomalavolta.c
 
 async function json(path, init) {
   const r = await fetch(`${BASE}${path}`, {
+    credentials: "include",
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -42,4 +43,15 @@ export const api = {
       body: JSON.stringify(b),
     }),
   deleteUsato: (id) => json(`/api/trattori/usati/${id}`, { method: "DELETE" }),
+
+  // AUTH (cookie-based)
+  auth: {
+    login: (email, password) =>
+      json(`/api/auth/login`, {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      }),
+    me: () => json(`/api/auth/me`, { method: "GET" }),
+    logout: () => json(`/api/auth/logout`, { method: "POST" }),
+  },
 };

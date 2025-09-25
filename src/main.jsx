@@ -6,6 +6,8 @@ import NuoviForm from "./pages/nuovi/Form.jsx";
 import UsatiList from "./pages/usati/List.jsx";
 import UsatiForm from "./pages/usati/Form.jsx";
 import "./index.css";
+import { AuthProvider, RequireAuth } from "./lib/auth";
+import Login from "./pages/auth/Login.jsx";
 
 function Layout() {
   return (
@@ -34,7 +36,16 @@ function Layout() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <Layout />
-  </BrowserRouter>
+  <React.StrictMode>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/*" element={<Layout />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  </React.StrictMode>
 );

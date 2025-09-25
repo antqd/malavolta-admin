@@ -33,13 +33,15 @@ export default function Login() {
 
   return (
     <div className="max-w-sm mx-auto">
-      <h2 className="text-lg font-semibold mb-4">Login</h2>
+      <h2 className="text-xl font-bold mb-6 text-center">Login</h2>
       <form onSubmit={submit} className="space-y-3">
         <input
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="border p-2 w-full"
           placeholder="Email"
+          required
         />
         <input
           type="password"
@@ -47,13 +49,13 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           className="border p-2 w-full"
           placeholder="Password"
+          required
         />
         {err && <p className="text-red-600">{err}</p>}
-        <button disabled={loading} className="bg-black text-white px-4 py-2 rounded w-full">
+        <button disabled={loading} className="bg-black text-white px-4 py-2 rounded w-full hover:bg-gray-800 disabled:opacity-50">
           {loading ? "…" : "Entra"}
         </button>
       </form>
     </div>
   );
 }
-
