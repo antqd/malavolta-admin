@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BellRing, CheckCircle2, Clock, Info, ShieldAlert } from "lucide-react";
+import { BellRing, CheckCircle2, Clock, Info, ShieldAlert, UserCircle } from "lucide-react";
 import { api } from "../../lib/api";
 
 const iconMap = {
@@ -17,10 +17,10 @@ function classify(action = "") {
   return "muted";
 }
 
-function formatTitle(action, entity) {
+function formatTitle(action) {
   const base = action ? action.replace(/_/g, " ") : "attività";
   const capitalised = base.charAt(0).toUpperCase() + base.slice(1);
-  return entity ? `${capitalised} • ${entity}` : capitalised;
+  return capitalised;
 }
 
 function formatMessage(meta) {
@@ -28,12 +28,7 @@ function formatMessage(meta) {
   if (typeof meta === "string") return meta;
   if (meta.message) return meta.message;
   if (meta.detail) return meta.detail;
-  const entries = Object.entries(meta);
-  if (!entries.length) return "";
-  return entries
-    .slice(0, 3)
-    .map(([key, value]) => `${key}: ${typeof value === "object" ? JSON.stringify(value) : value}`)
-    .join(" • ");
+  return "";
 }
 
 function formatTime(ts) {
@@ -56,7 +51,12 @@ export default function Notifications() {
         setErr(null);
         const data = await api.audit.list();
         if (!active) return;
-        setItems(data.items || []);
+        const list = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data)
+          ? data
+          : [];
+        setItems(list);
       } catch (error) {
         console.error("Errore notifiche:", error);
         if (active) setErr(error.message || "Errore nel recupero notifiche");
@@ -93,15 +93,33 @@ export default function Notifications() {
         </div>
       ) : items.length ? (
         <section className="notifications-grid">
-          {items.map(({ action, entity, meta, createdAt }, idx) => {
+          {items.map((item, idx) => {
+            const {
+              id,
+              action,
+              entity,
+              meta,
+              createdAt,
+              userEmail,
+              userId,
+              ip,
+              ua,
+            } = item || {};
             const type = classify(action);
             const Icon = iconMap[type] || Info;
-            const title = formatTitle(action, entity);
+            const title = formatTitle(action);
             const message = formatMessage(meta);
             const time = formatTime(createdAt);
+            const key = id ?? `${action}-${entity}-${idx}`;
+            const userLabel = userEmail || (userId ? `Utente #${userId}` : null);
+            const metaEntries =
+              meta && typeof meta === "object"
+                ? Object.entries(meta).filter(([k]) => k !== "message" && k !== "detail")
+                : [];
+            const entityLabel = entity ? entity.replace(/_/g, " ") : null;
 
             return (
-              <article key={`${action}-${entity}-${idx}`} className={`notification-card is-${type}`}>
+              <article key={key} className={`notification-card is-${type}`}>
                 <div className="notification-icon" aria-hidden="true">
                   <Icon size={20} />
                 </div>
@@ -110,10 +128,31 @@ export default function Notifications() {
                     <h2>{title}</h2>
                     <span>{time}</span>
                   </header>
-                  {message ? <p>{message}</p> : null}
-                  {!message && meta ? (
-                    <pre className="notification-meta">{JSON.stringify(meta, null, 2)}</pre>
+                  {entityLabel ? (
+                    <span className={`entity-pill entity-${type}`}>{entityLabel}</span>
                   ) : null}
+                  {userLabel ? (
+                    <div className="notification-info">
+                      <UserCircle size={14} aria-hidden="true" />
+                      <span>{userLabel}</span>
+                      {ip ? <span className="dot" /> : null}
+                      {ip ? <span className="ip">IP {ip}</span> : null}
+                    </div>
+                  ) : null}
+                  {message ? <p>{message}</p> : null}
+                  {metaEntries.length ? (
+                    <ul className="meta-list">
+                      {metaEntries.map(([metaKey, value], metaIdx) => (
+                        <li key={`${metaKey}-${metaIdx}`} className="meta-chip">
+                          <span className="meta-key">{metaKey}</span>
+                          <span className="meta-value">
+                            {typeof value === "object" ? JSON.stringify(value) : String(value)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {ua ? <div className="ua">User-Agent: {ua}</div> : null}
                 </div>
               </article>
             );

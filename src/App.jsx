@@ -21,7 +21,12 @@ function AppShell() {
       try {
         const data = await api.audit.list();
         if (!active) return;
-        const total = typeof data.total === "number" ? data.total : data.items?.length || 0;
+        const items = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data)
+          ? data
+          : [];
+        const total = typeof data?.total === "number" ? data.total : items.length;
         setNotifCount(total);
       } catch (err) {
         console.error("Errore caricamento notifiche:", err);
