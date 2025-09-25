@@ -44,11 +44,7 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return React.createElement(AuthContext.Provider, { value }, children);
 }
 
 // ---- HOOK ----
@@ -64,17 +60,16 @@ export function RequireAuth() {
   const loc = useLocation();
 
   if (loading) {
-    // Spinner super semplice; personalizza se vuoi
-    return (
-      <div className="w-full flex items-center justify-center py-16">
-        <div className="animate-pulse text-gray-500">Verifica sessione…</div>
-      </div>
+    return React.createElement(
+      'div',
+      { className: 'w-full flex items-center justify-center py-16' },
+      React.createElement('div', { className: 'animate-pulse text-gray-500' }, 'Verifica sessione…')
     );
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: loc }} />;
+    return React.createElement(Navigate, { to: '/login', replace: true, state: { from: loc } });
   }
 
-  return <Outlet />;
+  return React.createElement(Outlet, null);
 }
