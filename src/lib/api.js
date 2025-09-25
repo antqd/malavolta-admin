@@ -44,6 +44,18 @@ export const api = {
     }),
   deleteUsato: (id) => json(`/api/trattori/usati/${id}`, { method: "DELETE" }),
 
+  // USERS
+  users: {
+    list: ({ page = 1, take = 50 } = {}) =>
+      json(`/api/users?page=${page}&take=${take}`),
+    get: (id) => json(`/api/users/${id}`),
+  },
+
+  // AUDIT
+  audit: {
+    list: () => json(`/api/audit`),
+  },
+
   // AUTH (cookie-based)
   auth: {
     login: (email, password) =>
