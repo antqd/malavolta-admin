@@ -1,15 +1,10 @@
 // src/lib/auth.js
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { api } from "./api";
 
 // ---- CONTEXT ----
-const AuthContext = createContext(null);
-
-// Esponiamo anche su globalThis per come è costruita la tua Login.jsx
-// In questo modo Login.jsx può leggere (globalThis).__ADMIN_AUTH_CTX__
-if (!globalThis.__ADMIN_AUTH_CTX__) {
-  globalThis.__ADMIN_AUTH_CTX__ = AuthContext;
-}
+export const AuthContext = createContext(null);
 
 // ---- PROVIDER ----
 export function AuthProvider({ children }) {
@@ -64,12 +59,6 @@ export function useAuth() {
 }
 
 // ---- ROUTE GUARD (React Router v6) ----
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-
-/**
- * Usa <RequireAuth> come wrapper delle route protette.
- * Se non loggato -> redirect a /login tenendo traccia della pagina richiesta.
- */
 export function RequireAuth() {
   const { user, loading } = useAuth();
   const loc = useLocation();
