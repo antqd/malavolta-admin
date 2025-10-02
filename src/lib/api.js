@@ -1,12 +1,20 @@
 const BASE = import.meta.env.VITE_BACKEND_URL || "https://api.alfonsomalavolta.com";
 
-async function json(path, init) {
+async function json(path, init = {}) {
+  const { body, headers: extraHeaders, ...rest } = init;
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
+  const defaultHeaders =
+    body === undefined || isForm
+      ? {}
+      : { "Content-Type": "application/json" };
+
   const r = await fetch(`${BASE}${path}`, {
     credentials: "include",
-    ...init,
+    body,
+    ...rest,
     headers: {
-      "Content-Type": "application/json",
-      ...(init && init.headers),
+      ...defaultHeaders,
+      ...(extraHeaders || {}),
     },
   });
   const ct = r.headers.get("content-type") || "";
@@ -22,12 +30,12 @@ export const api = {
   listNuovi: (q = "") =>
     json(`/api/trattori/nuovi${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   getNuovo: (id) => json(`/api/trattori/nuovi/${id}`),
-  createNuovo: (b) =>
-    json(`/api/trattori/nuovi`, { method: "POST", body: JSON.stringify(b) }),
-  updateNuovo: (id, b) =>
+  createNuovo: (body) =>
+    json(`/api/trattori/nuovi`, { method: "POST", body }),
+  updateNuovo: (id, body) =>
     json(`/api/trattori/nuovi/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(b),
+      body,
     }),
   deleteNuovo: (id) => json(`/api/trattori/nuovi/${id}`, { method: "DELETE" }),
 
@@ -35,12 +43,12 @@ export const api = {
   listUsati: (q = "") =>
     json(`/api/trattori/usati${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   getUsato: (id) => json(`/api/trattori/usati/${id}`),
-  createUsato: (b) =>
-    json(`/api/trattori/usati`, { method: "POST", body: JSON.stringify(b) }),
-  updateUsato: (id, b) =>
+  createUsato: (body) =>
+    json(`/api/trattori/usati`, { method: "POST", body }),
+  updateUsato: (id, body) =>
     json(`/api/trattori/usati/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(b),
+      body,
     }),
   deleteUsato: (id) => json(`/api/trattori/usati/${id}`, { method: "DELETE" }),
 

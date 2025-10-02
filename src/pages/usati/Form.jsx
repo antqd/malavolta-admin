@@ -21,17 +21,28 @@ export default function UsatiForm() {
     price: "",
     quantity: 0,
   });
+  const [photoFile, setPhotoFile] = useState(null);
   const [err, setErr] = useState(null);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState("");
 
   useEffect(() => {
+    if (photoFile) {
+      const url = URL.createObjectURL(photoFile);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
     const s = (form.photo || "").trim();
     if (!s) return setPreview("");
-    if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:") || s.startsWith("/"))
+    if (
+      s.startsWith("http://") ||
+      s.startsWith("https://") ||
+      s.startsWith("data:") ||
+      s.startsWith("/")
+    )
       setPreview(s);
     else setPreview("");
-  }, [form.photo]);
+  }, [photoFile, form.photo]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -45,6 +56,7 @@ export default function UsatiForm() {
           price: ((d.price_cents ?? 0) / 100).toString(),
           quantity: d.quantity ?? 0,
         });
+        setPhotoFile(null);
       } catch (e) {
         setErr(e.message);
       }
@@ -54,9 +66,9 @@ export default function UsatiForm() {
   const onPickFile = async (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((x) => ({ ...x, photo: String(reader.result) }));
-    reader.readAsDataURL(f);
+    setPhotoFile(f);
+    setForm((x) => ({ ...x, photo: "" }));
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const onDecQty = () =>
@@ -69,15 +81,19 @@ export default function UsatiForm() {
     setSaving(true);
     setErr(null);
     try {
-      const body = {
-        name: form.name.trim(),
-        photo: form.photo || null,
-        description: form.description?.trim() || null,
-        price: form.price ? Number(String(form.price).replace(",", ".")) : 0,
-        quantity: Number(form.quantity) || 0,
-      };
-      if (isEdit) await api.updateUsato(id, body);
-      else await api.createUsato(body);
+      const fd = new FormData();
+      const priceValue = form.price
+        ? Number(String(form.price).replace(",", "."))
+        : 0;
+      fd.append("name", form.name.trim());
+      fd.append("description", form.description?.trim() || "");
+      fd.append("price", String(priceValue));
+      fd.append("quantity", String(Number(form.quantity) || 0));
+      if (photoFile) fd.append("photo", photoFile);
+      else fd.append("photo", form.photo ?? "");
+
+      if (isEdit) await api.updateUsato(id, fd);
+      else await api.createUsato(fd);
       nav("/usati");
     } catch (e) {
       setErr(e.message);
@@ -126,7 +142,10 @@ export default function UsatiForm() {
                   className="input"
                   placeholder="https://… oppure verrà riempito se carichi un file"
                   value={form.photo}
-                  onChange={(e) => setForm({ ...form, photo: e.target.value })}
+                  onChange={(e) => {
+                    setPhotoFile(null);
+                    setForm({ ...form, photo: e.target.value });
+                  }}
                 />
                 <button
                   type="button"
