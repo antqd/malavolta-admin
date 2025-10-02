@@ -69,9 +69,9 @@ function AppShell() {
     <div className="app-shell">
       <header className="app-navbar">
         <NavLink to="/nuovi" className="app-brand" aria-label="Dashboard trattori">
-          <div className="brand-logo">AT</div>
+          <div className="brand-logo">AM</div>
           <div>
-            <p className="brand-title">Admin Tieri</p>
+            <p className="brand-title">Admin Malavolta</p>
             <p className="brand-subtitle">Console di gestione</p>
           </div>
         </NavLink>
