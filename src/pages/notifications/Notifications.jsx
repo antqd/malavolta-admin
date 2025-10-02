@@ -124,35 +124,41 @@ export default function Notifications() {
                   <Icon size={20} />
                 </div>
                 <div className="notification-content">
-                  <header>
-                    <h2>{title}</h2>
-                    <span>{time}</span>
+                  <header className="notification-header">
+                    <h2 className="notification-title">{title}</h2>
+                    {time ? <span className="notification-time">{time}</span> : null}
                   </header>
-                  {entityLabel ? (
-                    <span className={`entity-pill entity-${type}`}>{entityLabel}</span>
-                  ) : null}
-                  {userLabel ? (
-                    <div className="notification-info">
-                      <UserCircle size={14} aria-hidden="true" />
-                      <span>{userLabel}</span>
-                      {ip ? <span className="dot" /> : null}
-                      {ip ? <span className="ip">IP {ip}</span> : null}
-                    </div>
-                  ) : null}
-                  {message ? <p>{message}</p> : null}
-                  {metaEntries.length ? (
-                    <ul className="meta-list">
-                      {metaEntries.map(([metaKey, value], metaIdx) => (
-                        <li key={`${metaKey}-${metaIdx}`} className="meta-chip">
-                          <span className="meta-key">{metaKey}</span>
-                          <span className="meta-value">
-                            {typeof value === "object" ? JSON.stringify(value) : String(value)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {ua ? <div className="ua">User-Agent: {ua}</div> : null}
+
+                  <div className="notification-tags">
+                    {entityLabel ? (
+                      <span className={`entity-pill entity-${type}`}>{entityLabel}</span>
+                    ) : null}
+                    {userLabel ? (
+                      <div className="notification-info">
+                        <UserCircle size={14} aria-hidden="true" />
+                        <span>{userLabel}</span>
+                        {ip ? <span className="dot" /> : null}
+                        {ip ? <span className="ip">IP {ip}</span> : null}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="notification-body">
+                    {message ? <p className="notification-message">{message}</p> : null}
+                    {metaEntries.length ? (
+                      <ul className="meta-list">
+                        {metaEntries.map(([metaKey, value], metaIdx) => (
+                          <li key={`${metaKey}-${metaIdx}`} className="meta-chip">
+                            <span className="meta-key">{metaKey}</span>
+                            <span className="meta-value">
+                              {typeof value === "object" ? JSON.stringify(value) : String(value)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {ua ? <div className="ua">User-Agent: {ua}</div> : null}
+                  </div>
                 </div>
               </article>
             );
