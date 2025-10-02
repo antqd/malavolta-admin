@@ -82,7 +82,7 @@ export default function NuoviList() {
           <div className="grid">
             {items.map((p) => (
               <div key={p.id} className="cardItem">
-                <div className="row" style={{ gap: 12, gridTemplateColumns: "120px 1fr auto" }}>
+                <div className="row inventory-row">
                   <img
                     src={
                       (p.photo_url || "").startsWith("http") || (p.photo_url || "").startsWith("data:")
@@ -91,36 +91,35 @@ export default function NuoviList() {
                         ? p.photo_url
                         : "https://via.placeholder.com/240x160?text=No+Photo"
                     }
-                    className="thumb"
+                    className="thumb thumb-list"
                     alt={p.name}
-                    style={{ height: 80, width: 120, objectFit: "cover", borderRadius: 8 }}
                   />
 
-                  <div style={{ minWidth: 0 }}>
-                    <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-                      <h3 style={{ margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div className="inventory-content">
+                    <div className="row inventory-header">
+                      <h3 className="inventory-title">
                         {p.name}
                       </h3>
                       <span className="badge">{euro(p.price_cents)}</span>
                     </div>
 
-                    <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                    <div className="inventory-description">
                       {p.description || "—"}
                     </div>
 
-                    <div className="row" style={{ justifyContent: "space-between", marginTop: 6 }}>
-                      <span style={{ fontSize: 12 }}>
+                    <div className="row inventory-footer">
+                      <span>
                         Codice: <strong>{p.id}</strong> • Qty: <strong>{p.quantity}</strong>
                       </span>
                       {p.quantity === 1 && (
-                        <span className="badge" style={{ background: "#fee2e2", color: "#b91c1c" }}>
+                        <span className="badge badge-warning">
                           Solo 1 disponibile
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="actions" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div className="actions inventory-actions">
                     <Link to={`/nuovi/${p.id}`} className="btn secondary">Modifica</Link>
                     <button onClick={() => delItem(p.id)} className="btn danger">Elimina</button>
                   </div>

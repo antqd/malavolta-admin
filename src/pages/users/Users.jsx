@@ -67,19 +67,15 @@ export default function Users() {
       </div>
 
       <div className="card filters-card">
-        <div
-          className="filters-row"
-          style={{ alignItems: "center", gridTemplateColumns: "auto auto 1fr" }}
-        >
-          <div className="muted-text">Mostra</div>
+        <div className="filters-row users-filters">
+          <div className="muted-text users-filters__label">Mostra</div>
           <select
-            className="input"
+            className="input users-filters__select"
             value={take}
             onChange={(e) => {
               setPage(1);
               setTake(Number(e.target.value));
             }}
-            style={{ maxWidth: 120 }}
           >
             {takeOptions.map((opt) => (
               <option key={opt} value={opt}>
@@ -87,7 +83,7 @@ export default function Users() {
               </option>
             ))}
           </select>
-          <div className="muted-text" style={{ justifySelf: "end" }}>
+          <div className="muted-text users-filters__summary">
             {total ? `Risultati ${showingFrom} – ${showingTo} su ${total}` : "Nessun utente"}
           </div>
         </div>
@@ -100,43 +96,45 @@ export default function Users() {
           <div className="empty-state">Caricamento utenti…</div>
         ) : items.length ? (
           <>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nome</th>
-                  <th>Email</th>
-                  <th>Creato</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((user) => (
-                  <tr key={user.id}>
-                    <td>#{user.id}</td>
-                    <td>
-                      <strong>{user.name || "—"}</strong>
-                    </td>
-                    <td>
-                      <div className="contact-row">
-                        <Mail size={14} aria-hidden="true" />
-                        <a href={`mailto:${user.email}`}>{user.email}</a>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="contact-row">
-                        <CalendarClock size={14} aria-hidden="true" />
-                        {user.createdAt
-                          ? new Date(user.createdAt).toLocaleString("it-IT", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                            })
-                          : "—"}
-                      </div>
-                    </td>
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Creato</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {items.map((user) => (
+                    <tr key={user.id}>
+                      <td>#{user.id}</td>
+                      <td>
+                        <strong>{user.name || "—"}</strong>
+                      </td>
+                      <td>
+                        <div className="contact-row">
+                          <Mail size={14} aria-hidden="true" />
+                          <a href={`mailto:${user.email}`}>{user.email}</a>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="contact-row">
+                          <CalendarClock size={14} aria-hidden="true" />
+                          {user.createdAt
+                            ? new Date(user.createdAt).toLocaleString("it-IT", {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                              })
+                            : "—"}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             <div className="table-footer">
               <div className="muted-text">Pagina {page} di {pages}</div>

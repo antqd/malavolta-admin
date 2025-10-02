@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { Bell, LogOut, Package, Tractor, Users } from "lucide-react";
+import { Bell, LogOut, Package, Tractor, Users, Menu, X } from "lucide-react";
 import { useAuth } from "./lib/auth";
 import { api } from "./lib/api";
 
@@ -14,6 +14,7 @@ function AppShell() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [notifCount, setNotifCount] = useState(null);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -37,6 +38,10 @@ function AppShell() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -76,9 +81,25 @@ function AppShell() {
           </div>
         </NavLink>
 
-        <nav className="app-nav">
+        <button
+          type="button"
+          className="app-nav-toggle"
+          aria-expanded={navOpen}
+          aria-controls="app-primary-nav"
+          onClick={() => setNavOpen((open) => !open)}
+        >
+          <span className="sr-only">Menu</span>
+          {navOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
+        </button>
+
+        <nav id="app-primary-nav" className={`app-nav${navOpen ? " is-open" : ""}`}>
           {primaryNav.map(({ to, label, icon: Icon, match }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => renderNavClass(to, match, isActive)}>
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => renderNavClass(to, match, isActive)}
+              onClick={() => setNavOpen(false)}
+            >
               <Icon size={18} aria-hidden="true" />
               <span>{label}</span>
             </NavLink>
